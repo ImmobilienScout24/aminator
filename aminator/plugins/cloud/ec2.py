@@ -207,6 +207,12 @@ class EC2CloudPlugin(BaseCloudPlugin):
         self.allocate_base_volume(tag=tag)
         # must do this as amazon still wants /dev/sd*
         ec2_device_name = blockdevice.replace('xvd', 'sd')
+
+        if not context.base_ami.root_device_name[-1].isdigit():
+            # strip off the digit, otherwise we'll get a partition table where we expect a filesystem
+            log.debug('Modifying device name to be able to mount it: was %s before and will be %s!' % (ec2_device_name, ec2_device_name[0:-1]))
+            ec2_device_name = ec2_device_name[0:-1]
+
         log.debug('Attaching volume {0} to {1}:{2}({3})'.format(self._volume.id, self._instance.id, ec2_device_name,
                                                                 blockdevice))
         self._volume.attach(self._instance.id, ec2_device_name)
